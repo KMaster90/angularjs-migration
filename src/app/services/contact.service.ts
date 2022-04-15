@@ -1,33 +1,32 @@
-import * as angular from 'angular';
+import {tap} from "rxjs/operators";
+import {Contact} from "./contact.resource";
+import { Injectable} from "@angular/core";
+import { ToastrService} from "ngx-toastr";
 
+@Injectable()
 export class ContactService {
-  private Contact;
-  private toaster;
-
   private page = 1;
   private hasMore = true;
-  private isLoading = false;
-  private isSaving = false;
-  private isDeleting = false;
+  public isLoading = false;
+  public isSaving = false;
+  public isDeleting = false;
   private selectedPerson = null;
-  private persons = [];
-  private search = null;
-  private sorting = 'name';
-  private ordering = 'ASC';
+  public persons = [];
 
-  constructor(Contact, toaster) {
-    this.Contact = Contact;
-    this.toaster = toaster;
+  public search = "";
+  public sorting = "name";
+  public ordering = "ASC";
+
+  constructor(
+    private contact: Contact,
+    private toastr: ToastrService
+  ) {
     this.loadContacts();
   }
 
   getPerson(email) {
     console.log(email);
-    for (let person of this.persons) {
-      if (person.email === email) {
-        return person;
-      }
-    }
+    return this.persons.find(person => person.email === email);
   }
 
   doSearch() {
@@ -49,65 +48,61 @@ export class ContactService {
       this.isLoading = true;
 
       let params = {
-        _page: this.page,
+        _page: this.page.toString(),
         _sort: this.sorting,
         _order: this.ordering,
-        q: this.search
+        q: this.search,
       };
 
-      this.Contact.query(params).then((res) => {
-        console.debug(res);
-        for (let person of res.data) {
-          this.persons.push(person);
-        }
-
-        if (!res.data) {
-          this.hasMore = false;
-        }
-        this.isLoading = false;
-      });
+      this.contact
+        .query(params)
+        .pipe(
+          tap(data => {
+            console.debug(data);
+            data && !!data.length
+              ? data.forEach(person => this.persons.push(person))
+              : (this.hasMore = false);
+            this.isLoading = false;
+          })
+        )
+        .subscribe();
     }
   }
 
   updateContact(person) {
-    return new Promise((resolve, reject) => {
-      this.isSaving = true;
-      this.Contact.update(person).then(() => {
-        this.isSaving = false;
-        this.toaster.pop("success", "Updated " + person.name);
-        resolve();
-      })
-    })
+    this.isSaving = true;
+    return this.contact.update(person).pipe(
+      tap(() => (this.isSaving = false)),
+      tap(() => this.toastr.success( "Updated " + person.name))
+    );
   }
 
   removeContact(person) {
-    return new Promise((resolve, reject) => {
-      this.isDeleting = true;
-      this.Contact.remove(person).then(() => {
-        this.isDeleting = false;
+    this.isDeleting = true;
+    return this.contact.remove(person).pipe(
+      tap(() => (this.isDeleting = false)),
+      tap(() => (this.selectedPerson = null)),
+      tap(() => {
         let index = this.persons.indexOf(person);
         this.persons.splice(index, 1);
-        this.selectedPerson = null;
-        this.toaster.pop('success', 'Deleted ' + person.name);
-        resolve()
-      });
-    });
+        this.toastr.success( "Deleted " + person.name);
+      })
+    );
   }
 
   createContact(person) {
-    return new Promise((resolve, reject) => {
-      this.isSaving = true;
-      this.Contact.save(person).then(() => {
+    this.isSaving = true;
+    return this.contact.save(person).pipe(
+      tap(() => {
         this.isSaving = false;
         this.selectedPerson = null;
         this.hasMore = true;
         this.page = 1;
         this.persons = [];
         this.loadContacts();
-        this.toaster.pop('success', 'Created ' + person.name);
-        resolve()
-      });
-    });
+        this.toastr.success("success", "Created " + person.name);
+      })
+    );
   }
 
   loadMore() {
@@ -117,7 +112,3 @@ export class ContactService {
     }
   }
 }
-
-angular
-  .module("codecraft")
-  .service("ContactService", ContactService);

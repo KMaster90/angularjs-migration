@@ -1,2 +1,2 @@
-import "./contact.service";
-import "./contact.resource";
+export * from "./contact.service";
+export * from  "./contact.resource";

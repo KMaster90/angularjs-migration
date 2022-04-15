@@ -1,74 +1,77 @@
-import * as angular from 'angular';
+import {Component, Input} from "@angular/core";
+import {ContactService} from "../services";
 
-let CardComponent = {
-  selector: "ccCard",
+@Component({
+  selector: "cc-card",
   template: `
-<div class="col-md-6">
-  <div class="well well-sm">
-    <div class="row">
-      <div class="col-md-4">
-        <img ng-src="{{ $ctrl.user.photo | defaultImage  }}"
-             alt=""
-             class="img-rounded img-responsive" />
-      </div>
-      <div class="col-md-8">
-        <h4>{{ $ctrl.user.name }}
-          <i class="fa"
-             ng-class="{'fa-female':$ctrl.user.sex == 'F', 'fa-male': $ctrl.user.sex == 'M'}"></i>
-        </h4>
-        <small>{{ $ctrl.user.city }}, {{ $ctrl.user.country }}
-          <i class="fa fa-map-marker"></i>
-        </small>
-        <p>
-          <i class="fa fa-envelope-o"></i>
-          {{ $ctrl.user.email }}
-          <br />
-          <i class="fa fa-gift"></i>
-          {{ $ctrl.user.birthdate | date:"longDate"}}
-        </p>
+    <div class="col-md-6">
+      <div class="well well-sm">
+        <div class="row">
+          <div class="col-md-4">
+            <img
+              [src]="user.photo|defaultImage"
+              alt=""
+              class="img-rounded img-responsive"
+            />
+          </div>
+          <div class="col-md-8">
+            <h4>
+              {{ user.name }}
+              <i
+                class="fa"
+                [ngClass]="{
+                  'fa-female': user.sex == 'F',
+                  'fa-male': user.sex == 'M'
+                }"
+              ></i>
+            </h4>
+            <small
+              >{{ user.city }}, {{ user.country }}
+              <i class="fa fa-map-marker"></i>
+            </small>
+            <p>
+              <i class="fa fa-envelope-o"></i>
+              {{ user.email }}
+              <br />
+              <i class="fa fa-gift"></i>
+              {{ user.birthdate | date: "longDate" }}
+            </p>
 
+            <a
+              class="btn btn-default btn-sm"
+              [routerLink]="['/edit/' + user.email]"
+            >
+              <i class="fa fa-pencil"></i>
+              &nbsp;Edit
+            </a>
 
-        <a class="btn btn-default btn-sm"
-           ui-sref="edit({email:$ctrl.user.email})">
-          <i class="fa fa-pencil"></i>
-          &nbsp;Edit
-        </a>
-
-        <a class="btn btn-danger btn-sm"
-           ladda="$ctrl.isDeleting"
-           ng-click="$ctrl.deleteUser()">
-          <i class="fa fa-trash"></i>
-          &nbsp;Delete
-        </a>
-
+            <a
+              class="btn btn-danger btn-sm"
+              [ladda]="isDeleting"
+              (click)="deleteUser()"
+            >
+              <i class="fa fa-trash"></i>
+              &nbsp;Delete
+            </a>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</div>  
   `,
-  bindings: {
-    user: "="
-  },
-  controller: class CardController {
-    private contacts;
-    private isDeleting;
-    private user;
+})
+export class CardComponent {
+  @Input() public user;
 
-    constructor(ContactService) {
-      this.contacts = ContactService;
-      this.isDeleting = false;
-    }
+  public isDeleting;
 
-    deleteUser() {
-      this.isDeleting = true;
-      this.contacts.removeContact(this.user).then(() => {
-        this.isDeleting = false;
-      })
-    }
+  constructor(private contacts: ContactService) {
+    this.isDeleting = false;
   }
-};
 
-angular
-  .module("codecraft")
-  .component(CardComponent.selector, CardComponent);
-
+  deleteUser() {
+    this.isDeleting = true;
+    this.contacts
+      .removeContact(this.user)
+      .subscribe(() => (this.isDeleting = false));
+  }
+}

@@ -1,34 +1,30 @@
-import * as angular from 'angular';
+import {HttpClient} from "@angular/common/http";
+import {Injectable} from "@angular/core";
+import {Observable} from "rxjs";
 
+@Injectable()
 export class Contact {
   private apiRoot: string = "http://localhost:3000/contacts";
-  private $http;
 
-  constructor($http) {
-    this.$http = $http;
+  constructor(private http: HttpClient) {}
+
+  query(params: {[key: string]: string}): Observable<any[]> {
+    return this.http.get<any>(this.apiRoot, {params});
   }
 
-  query(params: { string: string }) {
-    return this.$http.get(this.apiRoot, { params });
+  get(id, params?: {string: string}): Observable<any> {
+    return this.http.get(this.apiRoot + "/" + id, {params});
   }
 
-  get(id, params?: { string: string }) {
-    return this.$http.get(this.apiRoot + '/' + id, { params });
+  save(data: any): Observable<any> {
+    return this.http.post(this.apiRoot, data);
   }
 
-  save(data: any) {
-    return this.$http.post(this.apiRoot, data);
+  update(data: any): Observable<any> {
+    return this.http.put(this.apiRoot + "/" + data.id, data);
   }
 
-  update(data: any) {
-    return this.$http.put(this.apiRoot + '/' + data.id, data);
-  }
-
-  remove(data: any) {
-    return this.$http.delete(this.apiRoot + '/' + data.id);
+  remove(data: any): Observable<any> {
+    return this.http.delete(this.apiRoot + "/" + data.id);
   }
 }
-
-angular
-  .module("codecraft")
-  .service("Contact", Contact);

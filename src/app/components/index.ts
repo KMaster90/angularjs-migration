@@ -1,6 +1,6 @@
-import "./person-create.component";
-import "./person-edit.component";
-import "./person-list.component";
-import "./card.component";
-import "./spinner.component";
-import "./search.component";
+export * from "./person-create.component";
+export * from "./person-edit.component";
+export * from "./person-list.component";
+export * from "./card.component";
+export * from "./spinner.component";
+export * from "./search.component";

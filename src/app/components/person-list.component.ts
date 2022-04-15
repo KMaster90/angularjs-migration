@@ -1,43 +1,37 @@
-import * as angular from 'angular';
+import {Component} from "@angular/core";
+import {ContactService} from "../services";
 
-
-export let PersonListComponent = {
-  selector: 'personList',
+@Component({
+  selector: "person-list",
   template: `
-<div class="col-md-12" >
+    <div class="col-md-12">
+      <div
+        class="row"
+        infiniteScroll
+        [infiniteScrollDistance]="1"
+        [immediateCheck]="false"
+        [infiniteScrollThrottle]="100"
+        (scrolled)="contacts.loadMore()"
+      >
+        <cc-card *ngFor="let person of contacts.persons" [user]="person">
+        </cc-card>
+      </div>
 
-	<div class="row"
-	     infinite-scroll="$ctrl.contacts.loadMore()"
-	     infinite-scroll-immediate-check="false"
-	     infinite-scroll-distance="1"
-			>
+      <div *ngIf="contacts.persons.length == 0 && contacts.isLoading">
+        <div class="alert alert-info">
+          <p class="text-center">
+            No results found for search term '{{ contacts.search }}'
+          </p>
+        </div>
+      </div>
 
-		<cc-card ng-repeat="person in $ctrl.contacts.persons"
-				     user="person" >
-		</cc-card>
-
-	</div >
-
-	<div ng-show="$ctrl.contacts.persons.length == 0 && !$ctrl.contacts.isLoading" >
-		<div class="alert alert-info" >
-			<p class="text-center" >No results found for search term '{{ $ctrl.search }}'</p >
-		</div >
-	</div >
-
-	<cc-spinner is-loading="$ctrl.contacts.isLoading"
-	            message="Loading..." ></cc-spinner >
-</div >
-`,
-  bindings: {},
-  controller: class PersonListController {
-    public contacts = null;
-
-    constructor(ContactService) {
-      this.contacts = ContactService;
-    }
-  }
-};
-
-angular
-    .module('codecraft')
-    .component(PersonListComponent.selector, PersonListComponent);
+      <cc-spinner
+        [isLoading]="contacts.isLoading"
+        message="Loading..."
+      ></cc-spinner>
+    </div>
+  `,
+})
+export class PersonListComponent {
+  constructor(public contacts: ContactService) {}
+}
